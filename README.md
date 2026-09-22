@@ -1,55 +1,29 @@
 # Lab S1. Mô hình đe dọa — Hệ thống web bán hàng
 
-## Giới thiệu
-
-Bài này dựng mô hình mối đe dọa cho một hệ thống nhỏ theo yêu cầu của lab S1. Hệ thống được chọn, tám mối đe dọa được liệt kê, và ba mối được ưu tiên xử lý dựa trên tích số tác động × khả năng.
+**Môi trường để tái lập:** `sudo apt install make python3 python3-pip -y && pip3 install pytest jsonschema --break-system-packages`, sau đó chạy `make preflight` rồi `make verify`.
 
 ## Hệ thống được chọn
 
-Một website bán hàng trực tuyến quy mô nhỏ, gồm ba thành phần:
+Website bán hàng trực tuyến quy mô nhỏ, ba thành phần: **trình duyệt khách hàng** (duyệt sản phẩm, đặt hàng, thanh toán) → **máy chủ ứng dụng web** (xử lý logic, xác thực người dùng) → **cơ sở dữ liệu** (lưu sản phẩm, đơn hàng, tài khoản).
+Browser ──HTTPS──▶ App server ──SQL──▶ Database
+Browser ◀───────── App server ◀─────── Database
 
-- **Trình duyệt khách hàng** — giao diện duyệt sản phẩm, đặt hàng và thanh toán.
-- **Máy chủ ứng dụng web** — xử lý logic nghiệp vụ, xác thực người dùng, điều phối truy vấn tới cơ sở dữ liệu.
-- **Cơ sở dữ liệu** — lưu thông tin sản phẩm, đơn hàng và tài khoản người dùng.
-
-## Tám mối đe dọa đã liệt kê
-
-Chi tiết đầy đủ (phát biểu kiểm được, nguyên lý liên quan, mã MITRE ATT&CK, điểm tác động và khả năng) nằm trong `docs/threat-model.json`. Tóm tắt:
-
-| Mã | Mối đe dọa | Tác động | Khả năng | Điểm |
-|----|-----------|----------|----------|------|
-| M01 | Chèn SQL qua ô tìm kiếm | 5 | 3 | 15 |
-| M02 | Đánh cắp cookie qua XSS | 4 | 3 | 12 |
-| M03 | Đọc chéo đơn hàng giữa khách hàng (IDOR) | 4 | 4 | 16 |
-| M04 | Dò mật khẩu quản trị (brute force) | 5 | 2 | 10 |
-| M05 | Nghe lén dữ liệu thanh toán (thiếu HTTPS) | 5 | 2 | 10 |
-| M06 | Khai thác thư viện xử lý ảnh lỗi thời | 5 | 2 | 10 |
-| M07 | Lộ tệp sao lưu cơ sở dữ liệu | 5 | 3 | 15 |
-| M08 | Lừa đảo (phishing) tài khoản quản trị | 4 | 3 | 12 |
+Ranh giới tin cậy: App server không tin dữ liệu do Browser gửi lên; Database chỉ tin truy vấn đã qua xác thực từ App server.
 
 ## Ba mối đe dọa được chọn xử lý
 
-Xếp theo điểm tác động × khả năng, ba mối cao nhất được chọn:
+(Chi tiết đầy đủ 8 mối đe dọa nằm trong `docs/threat-model.json`)
 
-1. **M03 — Đọc chéo đơn hàng giữa các khách hàng (IDOR, điểm 16)**
-   Máy chủ không kiểm mã người dùng khi trả về đơn hàng theo ID, cho phép một khách hàng đã đăng nhập đọc được đơn hàng của khách hàng khác chỉ bằng cách đổi số ID trên URL.
-   *Ước lượng xử lý: 8 giờ công lập trình viên, dựa trên việc sửa 3 endpoint liên quan đơn hàng.*
+| Mã | Mối đe dọa | Điểm (Tác động × Khả năng) | Chi phí xử lý |
+|----|-----------|:---:|---|
+| M03 | Đọc chéo đơn hàng giữa khách hàng do thiếu kiểm mã người dùng (IDOR) | 16 | 8 giờ công lập trình viên |
+| M01 | Chèn SQL qua ô tìm kiếm sản phẩm | 15 | 12 giờ công lập trình viên |
+| M07 | Lộ tệp sao lưu cơ sở dữ liệu trong thư mục công khai | 15 | 4 giờ công vận hành |
 
-2. **M01 — Chèn SQL qua ô tìm kiếm sản phẩm (điểm 15)**
-   Dữ liệu đầu vào không được kiểm tra và làm sạch, cho phép kẻ tấn công đọc toàn bộ bảng người dùng.
-   *Ước lượng xử lý: 12 giờ công lập trình viên, dựa trên số truy vấn SQL thô cần chuyển sang câu lệnh tham số hoá.*
+Ba mối này có điểm tác động × khả năng cao nhất (16, 15, 15) trong khi chi phí xử lý thấp (4 đến 12 giờ công) so với thiệt hại nếu bị khai thác — toàn bộ dữ liệu khách hàng và đơn hàng bị lộ. Đây là lựa chọn theo tỉ lệ lợi ích trên chi phí cao nhất, không chỉ dựa thuần vào thứ hạng điểm số.
 
-3. **M07 — Lộ tệp sao lưu cơ sở dữ liệu (điểm 15)**
-   Tệp sao lưu đặt trong thư mục công khai của máy chủ web, không có xác thực, nên bất kỳ ai biết đường dẫn cũng tải được toàn bộ dữ liệu khách hàng.
-   *Ước lượng xử lý: 4 giờ công vận hành, dựa trên thời gian di chuyển thư mục sao lưu ra ngoài webroot.*
-
-## Vì sao chọn ba mối này chứ không phải ba mối khác
-
-Ba mối M03, M01, M07 có điểm ưu tiên (tác động × khả năng) cao nhất trong danh sách tám mối, lần lượt là 16, 15, 15 — vượt trên nhóm còn lại chỉ dừng ở 10-12 điểm.
-
-Ngoài điểm số, cả ba đều có đặc điểm chung là **chi phí xử lý thấp** (4 đến 12 giờ công) so với mức thiệt hại nếu bị khai thác (rò rỉ toàn bộ dữ liệu khách hàng, mất niềm tin người dùng). Ngược lại, các mối như M05 (thiếu HTTPS) hay M06 (thư viện lỗi thời) tuy tác động cao nhưng khả năng khai thác thấp hơn (đòi hỏi kẻ tấn công ở cùng mạng, hoặc phải tìm đúng lỗ hổng cụ thể trong thư viện), và thường cần đầu tư hạ tầng lớn hơn để vá triệt để — nên được xếp sau trong đợt xử lý này.
+**Rủi ro bị bỏ lại:** năm mối còn lại (M02, M04, M05, M06, M08, điểm 10-12) tạm chưa xử lý trong đợt này vì khả năng khai thác thấp hơn hoặc cần đầu tư hạ tầng lớn hơn (dựng HTTPS, thay thư viện, thêm giới hạn đăng nhập). Đây là đánh đổi chi phí và tỉ lệ có chủ đích, không phải bị bỏ sót, và cần được xử lý ở đợt tiếp theo.
 
 ## Bằng chứng đã kiểm
 
-- `evidence/S1/preflight.txt` — xác nhận môi trường Docker, Python chạy đúng.
-- `make verify` chạy qua toàn bộ 14 phép kiểm tự động (test schema, số lượng mối đe dọa, mã ATT&CK, ba mối được chọn, ước lượng chi phí) — **đạt cả 14/14**.
+`evidence/S1/preflight.txt` xác nhận môi trường Docker, Python chạy đúng. `make verify` chạy qua 14 phép kiểm tự động (schema, số lượng mối đe dọa, mã ATT&CK, ba mối được chọn, ước lượng chi phí) — đạt **14/14**.
