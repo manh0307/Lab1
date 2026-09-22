@@ -1,0 +1,103 @@
+{
+  "he_thong": "Hệ thống web bán hàng trực tuyến quy mô nhỏ gồm giao diện khách hàng, máy chủ ứng dụng xử lý đơn hàng và cơ sở dữ liệu lưu sản phẩm, người dùng, đơn hàng.",
+  "thanh_phan": [
+    {
+      "ten": "Trình duyệt khách hàng",
+      "vai_tro": "Giao diện người dùng để duyệt sản phẩm, đặt hàng và thanh toán"
+    },
+    {
+      "ten": "Máy chủ ứng dụng web",
+      "vai_tro": "Xử lý logic nghiệp vụ, xác thực người dùng và điều phối truy vấn tới cơ sở dữ liệu"
+    },
+    {
+      "ten": "Cơ sở dữ liệu",
+      "vai_tro": "Lưu trữ thông tin sản phẩm, đơn hàng và tài khoản người dùng"
+    }
+  ],
+  "moi_de_doa": [
+    {
+      "ma": "M01",
+      "phat_bieu": "Nếu form tìm kiếm sản phẩm không kiểm tra và làm sạch dữ liệu đầu vào, kẻ tấn công có thể chèn câu lệnh SQL để đọc toàn bộ bảng người dùng từ cơ sở dữ liệu.",
+      "nguyen_ly": 5,
+      "attack": "T1190",
+      "tac_dong": 5,
+      "kha_nang": 3
+    },
+    {
+      "ma": "M02",
+      "phat_bieu": "Khi ứng dụng web không đặt cờ HttpOnly cho cookie phiên, một kịch bản XSS chèn được vào trang sản phẩm có thể đánh cắp cookie và chiếm phiên đăng nhập của khách hàng khác.",
+      "nguyen_ly": 4,
+      "attack": "T1539",
+      "tac_dong": 4,
+      "kha_nang": 3
+    },
+    {
+      "ma": "M03",
+      "phat_bieu": "Nếu máy chủ ứng dụng không kiểm tra mã người dùng khi trả về chi tiết đơn hàng theo ID, một khách hàng đã đăng nhập có thể đọc được đơn hàng của khách hàng khác bằng cách đổi số ID trên URL.",
+      "nguyen_ly": 2,
+      "attack": "T1213",
+      "tac_dong": 4,
+      "kha_nang": 4
+    },
+    {
+      "ma": "M04",
+      "phat_bieu": "Nếu trang quản trị không giới hạn số lần đăng nhập sai, kẻ tấn công có thể dò mật khẩu quản trị viên bằng phương pháp brute force cho tới khi đăng nhập thành công.",
+      "nguyen_ly": 3,
+      "attack": "T1110",
+      "tac_dong": 5,
+      "kha_nang": 2
+    },
+    {
+      "ma": "M05",
+      "phat_bieu": "Trong trường hợp kết nối giữa trình duyệt khách hàng và máy chủ web không được mã hóa bằng HTTPS, kẻ tấn công trên cùng mạng Wi-Fi công cộng có thể đọc được thông tin thẻ thanh toán khi truyền đi.",
+      "nguyen_ly": 4,
+      "attack": "T1557",
+      "tac_dong": 5,
+      "kha_nang": 2
+    },
+    {
+      "ma": "M06",
+      "phat_bieu": "Nếu máy chủ ứng dụng chạy thư viện xử lý ảnh đã lỗi thời có lỗ hổng thực thi mã từ xa, kẻ tấn công có thể tải lên ảnh sản phẩm độc hại để chiếm quyền điều khiển máy chủ.",
+      "nguyen_ly": 6,
+      "attack": "T1190",
+      "tac_dong": 5,
+      "kha_nang": 2
+    },
+    {
+      "ma": "M07",
+      "phat_bieu": "Nếu tệp sao lưu cơ sở dữ liệu được đặt trong thư mục công khai của máy chủ web mà không có xác thực, bất kỳ ai biết đường dẫn cũng có thể tải xuống toàn bộ dữ liệu khách hàng.",
+      "nguyen_ly": 4,
+      "attack": "T1530",
+      "tac_dong": 5,
+      "kha_nang": 3
+    },
+    {
+      "ma": "M08",
+      "phat_bieu": "Khi nhân viên quản trị mở một email giả mạo chứa liên kết đăng nhập giả, kẻ tấn công có thể thu thập được tài khoản quản trị và đăng nhập vào hệ thống quản lý cửa hàng.",
+      "nguyen_ly": 1,
+      "attack": "T1566",
+      "tac_dong": 4,
+      "kha_nang": 3
+    }
+  ],
+  "chon_xu_ly": [
+    {
+      "ma": "M03",
+      "chi_phi": 8,
+      "don_vi": "giờ công lập trình viên",
+      "can_cu": "Ước lượng dựa trên thời gian sửa 3 endpoint liên quan đơn hàng, mỗi endpoint khoảng 2-3 giờ bao gồm viết kiểm thử."
+    },
+    {
+      "ma": "M01",
+      "chi_phi": 12,
+      "don_vi": "giờ công lập trình viên",
+      "can_cu": "Ước lượng dựa trên số lượng truy vấn SQL thô cần chuyển sang câu lệnh tham số hoá trong module tìm kiếm và đăng nhập."
+    },
+    {
+      "ma": "M07",
+      "chi_phi": 4,
+      "don_vi": "giờ công vận hành",
+      "can_cu": "Ước lượng dựa trên thời gian di chuyển thư mục sao lưu ra ngoài webroot và cấu hình lại quyền truy cập trên máy chủ."
+    }
+  ]
+}
