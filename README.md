@@ -5,8 +5,10 @@
 ## Hệ thống được chọn
 
 Website bán hàng trực tuyến quy mô nhỏ, ba thành phần: **trình duyệt khách hàng** (duyệt sản phẩm, đặt hàng, thanh toán) → **máy chủ ứng dụng web** (xử lý logic, xác thực người dùng) → **cơ sở dữ liệu** (lưu sản phẩm, đơn hàng, tài khoản).
-Browser ──HTTPS──▶ App server ──SQL──▶ Database
-Browser ◀───────── App server ◀─────── Database
+
+Sơ đồ luồng dữ liệu:
+[Browser khach hang] --HTTPS--> [May chu ung dung web] --SQL--> [Co so du lieu]
+[Browser khach hang] <---------- [May chu ung dung web] <------ [Co so du lieu]
 
 Ranh giới tin cậy: App server không tin dữ liệu do Browser gửi lên; Database chỉ tin truy vấn đã qua xác thực từ App server.
 
